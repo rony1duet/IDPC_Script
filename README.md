@@ -148,3 +148,5 @@ The workspace is automatically created and populated with:
 | **Lock Internet (Toph Only)** | `setup.bat 7` (or `setup.bat lock`) |
 | **Check Status & Environment** | `setup.bat 8` (or `setup.bat status`) |
 | **Restore Full Access & Low UAC** | `setup.bat restore` (or run `C:\.SYSTEM\restore.bat`) |
+
+# IDPC_Script
