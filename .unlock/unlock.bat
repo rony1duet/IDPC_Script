@@ -11,8 +11,12 @@ echo.
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo [*] Requesting Administrator privileges...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process cmd -ArgumentList '/c \"\"%~f0\" %*' -Verb RunAs"
-    exit /b
+    if "%~1"=="" (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -ArgumentList '%*' -Verb RunAs"
+    )
+    exit /b 0
 )
 
 echo [1/3] Restoring Firewall Policies (Full Internet Access)...
@@ -30,6 +34,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorUser' -Value 3 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'PromptOnSecureDesktop' -Value 0 -Force -ErrorAction SilentlyContinue;" ^
+    "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'FilterAdministratorToken' -Value 0 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableLUA' -Value 1 -Force -ErrorAction SilentlyContinue;" >nul 2>&1
 echo       UAC policies set to Low (Elevate without prompting for administrators).
 

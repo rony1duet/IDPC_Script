@@ -66,6 +66,8 @@ if "%choice%"=="6" goto security_only
 if "%choice%"=="7" goto lock_only
 if "%choice%"=="8" goto status_only
 if "%choice%"=="9" exit /b
+if /i "%choice%"=="unlock" goto call_unlock
+if /i "%choice%"=="restore" goto call_unlock
 goto menu
 
 
@@ -194,6 +196,7 @@ goto menu
 :: 5. REINSTALL VS CODE, CODE::BLOCKS AND CODE RUNNER
 :: =============================================================
 :reinstall_only
+call :require_admin
 cls
 echo Reinstalling Code::Blocks, VS Code, Code Runner, PyCharm, and Sublime Text...
 call :clean_environment_paths
@@ -271,20 +274,20 @@ echo   CONTEST STATUS and ENVIRONMENT INSPECTION
 echo ==================================================
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$hasBits = Test-Path 'C:\MinGW\lib\gcc\mingw32\6.3.0\include\c++\mingw32\bits\stdc++.h'; if ($hasBits) { Write-Host '  MinGW (bits):      [PASS] C:\MinGW\bin\g++.exe (bits/stdc++.h OK)' -ForegroundColor Green } else { Write-Host '  MinGW (bits):      [NOT READY] Extract MinGW.zip' -ForegroundColor Yellow };" ^
-    "$cbOk = Test-Path 'C:\Program Files\CodeBlocks\codeblocks.exe'; if ($cbOk) { Write-Host '  Code::Blocks IDE:  [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Code::Blocks IDE:  [NOT FOUND]' -ForegroundColor Yellow };" ^
-    "$cCmd = $null; @('C:\Program Files\Microsoft VS Code\bin\code.cmd', ($env:LOCALAPPDATA + '\Programs\Microsoft VS Code\bin\code.cmd')) | ForEach-Object { if (-not $cCmd -and (Test-Path $_)) { $cCmd = $_ } }; if (-not $cCmd) { $c = Get-Command code.cmd -ErrorAction SilentlyContinue; if ($c) { $cCmd = $c.Source } };" ^
+    "$cbOk = (Test-Path 'C:\Program Files\CodeBlocks\codeblocks.exe') -or (Test-Path 'C:\Program Files (x86)\CodeBlocks\codeblocks.exe') -or (Get-Command codeblocks.exe -ErrorAction SilentlyContinue); if ($cbOk) { Write-Host '  Code::Blocks IDE:  [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Code::Blocks IDE:  [NOT FOUND]' -ForegroundColor Yellow };" ^
+    "$cCmd = $null; @('C:\Program Files\Microsoft VS Code\bin\code.cmd', ($env:LOCALAPPDATA + '\Programs\Microsoft VS Code\bin\code.cmd'), 'C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd') | ForEach-Object { if (-not $cCmd -and (Test-Path $_)) { $cCmd = $_ } }; if (-not $cCmd) { $c = Get-Command code.cmd -ErrorAction SilentlyContinue; if ($c) { $cCmd = $c.Source } };" ^
     "if ($cCmd) { Write-Host '  VS Code:           [PASS] Installed' -ForegroundColor Green } else { Write-Host '  VS Code:           [NOT FOUND]' -ForegroundColor Yellow };" ^
-    "$pyOk = Get-Command pycharm64.exe -ErrorAction SilentlyContinue; if ($pyOk) { Write-Host '  PyCharm IDE:         [PASS] Installed' -ForegroundColor Green } else { Write-Host '  PyCharm IDE:         [NOT FOUND]' -ForegroundColor Yellow };" ^
-    "$stOk = Test-Path 'C:\Program Files\Sublime Text\sublime_text.exe'; if ($stOk) { Write-Host '  Sublime Text:      [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Sublime Text:      [NOT FOUND]' -ForegroundColor Yellow };" ^
+    "$pyOk = (Resolve-Path 'C:\Program Files\JetBrains\PyCharm*\bin\pycharm64.exe','C:\Program Files (x86)\JetBrains\PyCharm*\bin\pycharm64.exe' -ErrorAction SilentlyContinue) -or (Get-Command pycharm64.exe -ErrorAction SilentlyContinue) -or (Test-Path ($env:LOCALAPPDATA + '\Programs\PyCharm*\bin\pycharm64.exe')); if ($pyOk) { Write-Host '  PyCharm IDE:       [PASS] Installed' -ForegroundColor Green } else { Write-Host '  PyCharm IDE:       [NOT FOUND]' -ForegroundColor Yellow };" ^
+    "$stOk = (Test-Path 'C:\Program Files\Sublime Text\sublime_text.exe') -or (Test-Path 'C:\Program Files (x86)\Sublime Text\sublime_text.exe') -or (Test-Path ($env:LOCALAPPDATA + '\Programs\Sublime Text\sublime_text.exe')) -or (Get-Command sublime_text.exe -ErrorAction SilentlyContinue); if ($stOk) { Write-Host '  Sublime Text:      [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Sublime Text:      [NOT FOUND]' -ForegroundColor Yellow };" ^
     "$hasCR = Test-Path ($env:USERPROFILE + '\.vscode\extensions\formulahendry.code-runner*'); if ($hasCR) { Write-Host '  Code Runner Ext:   [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Code Runner Ext:   [MISSING] Not installed' -ForegroundColor Red };" ^
     "$aiFound = $false; if (Get-Process -Name 'ollama*' -ErrorAction SilentlyContinue) { $aiFound = $true }; if (Test-Path ($env:LOCALAPPDATA + '\Programs\Ollama')) { $aiFound = $true }; if (Test-Path ($env:USERPROFILE + '\.ollama')) { $aiFound = $true }; if ($aiFound) { Write-Host '  Offline AI Tools:  [DETECTED] Ollama/AI files present' -ForegroundColor Red } else { Write-Host '  Offline AI Tools:  [PASS] Clean (None found)' -ForegroundColor Green };" ^
     "$uac = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -ErrorAction SilentlyContinue).ConsentPromptBehaviorAdmin; if ($uac -eq 1) { Write-Host '  Security Policy:   [HIGH] Admin Security and UAC Credentials Prompt Active' -ForegroundColor Green } else { Write-Host ('  Security Policy:   [NORMAL] UAC Level: ' + $uac) -ForegroundColor Gray };" ^
     "$cDir = Join-Path $env:USERPROFILE 'Desktop\Contest'; if (Test-Path $cDir) { Write-Host ('  Workspace:         [READY] ' + $cDir) -ForegroundColor Green } else { Write-Host '  Workspace:         [NOT CREATED]' -ForegroundColor Gray };" ^
-    "$hasUnl = (Test-Path 'C:\Program Files\.unlock\unlock.bat') -or (Test-Path (Join-Path '%ROOT%' '.unlock\unlock.bat')); if ($hasUnl) { Write-Host '  Unlock Script:     [READY] C:\Program Files\.unlock\unlock.bat' -ForegroundColor Green } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
+    "if (Test-Path 'C:\Program Files\.unlock\unlock.bat') { Write-Host '  Unlock Script:     [PASS] Deployed (C:\Program Files\.unlock\unlock.bat)' -ForegroundColor Green } elseif (Test-Path (Join-Path '%ROOT%' '.unlock\unlock.bat')) { Write-Host '  Unlock Script:     [READY IN REPO] .unlock\unlock.bat' -ForegroundColor Yellow } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
     "$fw = (netsh advfirewall show currentprofile firewallpolicy 2>$null) -join ' ';" ^
     "$isBlocked = $fw -match 'BlockInbound,BlockOutbound';" ^
     "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - ONLY BAPSOJ.ORG ALLOWED]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
-    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Bapsoj.org Access:  [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Bapsoj.org Access:  [FAIL] Unreachable' -ForegroundColor Red };"
+    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Bapsoj.org Access: [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Bapsoj.org Access: [FAIL] Unreachable' -ForegroundColor Red };"
 echo ==================================================
 echo.
 if not "!ARG!"=="" exit /b 0
@@ -314,8 +317,12 @@ goto menu
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo [*] Requesting Administrator privileges...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process cmd -ArgumentList '/c \"\"%~f0\" %*' -Verb RunAs"
-    exit
+    if "%~1"=="" (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -ArgumentList '%*' -Verb RunAs"
+    )
+    exit /b 0
 )
 exit /b 0
 
@@ -354,23 +361,24 @@ exit /b 0
 :clean_environment_paths
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "foreach ($target in @('Machine', 'User')) {" ^
-    "    $oldP = [Environment]::GetEnvironmentVariable('Path', $target);" ^
-    "    if ($oldP) {" ^
-    "        $parts = $oldP -split ';' | Where-Object {" ^
-    "            $_ -and" ^
-    "            ($_ -notmatch '(?i)CodeBlocks') -and" ^
-    "            ($_ -notmatch '(?i)MinGW') -and" ^
-    "            ($_ -notmatch '(?i)msys64') -and" ^
-    "            ($_ -notmatch '(?i)Microsoft VS Code')" ^
+    "    try {" ^
+    "        $oldP = [Environment]::GetEnvironmentVariable('Path', $target);" ^
+    "        if ($oldP) {" ^
+    "            $parts = $oldP -split ';' | Where-Object {" ^
+    "                $_ -and" ^
+    "                ($_ -notmatch '(?i)CodeBlocks') -and" ^
+    "                ($_ -notmatch '(?i)MinGW') -and" ^
+    "                ($_ -notmatch '(?i)msys64')" ^
+    "            };" ^
+    "            $newP = $parts -join ';';" ^
+    "            [Environment]::SetEnvironmentVariable('Path', $newP, $target);" ^
     "        };" ^
-    "        $newP = $parts -join ';';" ^
-    "        [Environment]::SetEnvironmentVariable('Path', $newP, $target);" ^
-    "    };" ^
-    "    $cur = [Environment]::GetEnvironmentVariable('Path', $target);" ^
-    "    if ($cur -split ';' -notcontains 'C:\MinGW\bin') {" ^
-    "        $up = if ($cur) { $cur.TrimEnd(';') + ';C:\MinGW\bin' } else { 'C:\MinGW\bin' };" ^
-    "        [Environment]::SetEnvironmentVariable('Path', $up, $target);" ^
-    "    }" ^
+    "        $cur = [Environment]::GetEnvironmentVariable('Path', $target);" ^
+    "        if ($cur -split ';' -notcontains 'C:\MinGW\bin') {" ^
+    "            $up = if ($cur) { $cur.TrimEnd(';') + ';C:\MinGW\bin' } else { 'C:\MinGW\bin' };" ^
+    "            [Environment]::SetEnvironmentVariable('Path', $up, $target);" ^
+    "        }" ^
+    "    } catch {}" ^
     "};" ^
     "Write-Host '       Cleaned conflicting paths and registered C:\MinGW\bin.' -ForegroundColor Green;"
 set "PATH=C:\MinGW\bin;%PATH%"
@@ -393,7 +401,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "        if (Test-Path $tPath) {" ^
     "            Get-ChildItem -LiteralPath $tPath -Force -ErrorAction SilentlyContinue | ForEach-Object {" ^
     "                if ($_.Name -like '*IDPC_Script*') { return };" ^
-    "                if ($scriptRoot -and ($scriptRoot -like ($_.FullName + '*'))) { return };" ^
+    "                if ($scriptRoot -and ($scriptRoot.StartsWith($_.FullName, [System.StringComparison]::OrdinalIgnoreCase) -or $_.FullName.StartsWith($scriptRoot, [System.StringComparison]::OrdinalIgnoreCase))) { return };" ^
     "                if ($_.Name -eq 'desktop.ini') { return };" ^
     "                if ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { return };" ^
     "                try {" ^
@@ -459,7 +467,10 @@ if exist "%CB_EXE%" (
     echo       Installing provided Code::Blocks...
     start /wait "" "%CB_EXE%" /S
     ping 127.0.0.1 -n 2 >nul
-    if exist "C:\Program Files\CodeBlocks\codeblocks.exe" (
+    set "CB_INST="
+    if exist "C:\Program Files\CodeBlocks\codeblocks.exe" set "CB_INST=1"
+    if exist "C:\Program Files (x86)\CodeBlocks\codeblocks.exe" set "CB_INST=1"
+    if defined CB_INST (
         echo       [OK] Code::Blocks installed successfully.
     ) else (
         echo       [WARNING] Code::Blocks installation could not be verified.
@@ -480,7 +491,7 @@ if not exist "%VS_EXE%" (
 )
 
 echo       Installing provided Visual Studio Code...
-start /wait "" "%VS_EXE%" /VERYSILENT /NORESTART /MERGETASKS="!runcode,addtopath,desktopicon"
+start /wait "" "%VS_EXE%" /VERYSILENT /NORESTART /MERGETASKS="desktopicon,addtopath"
 echo       [OK] Visual Studio Code installed.
 exit /b 0
 
@@ -540,7 +551,13 @@ if not exist "%PC_EXE%" (
 echo       Installing provided PyCharm IDE...
 start /wait "" "%PC_EXE%" /S >nul 2>&1
 ping 127.0.0.1 -n 2 >nul
-if exist "C:\Program Files\JetBrains\PyCharm*\bin\pycharm64.exe" (
+set "PC_BIN="
+if exist "C:\Program Files\JetBrains\PyCharm\bin\pycharm64.exe" set "PC_BIN=C:\Program Files\JetBrains\PyCharm\bin\pycharm64.exe"
+if not defined PC_BIN if exist "C:\Program Files\JetBrains\PyCharm Community Edition\bin\pycharm64.exe" set "PC_BIN=C:\Program Files\JetBrains\PyCharm Community Edition\bin\pycharm64.exe"
+if not defined PC_BIN (
+    for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Resolve-Path 'C:\Program Files\JetBrains\PyCharm*\bin\pycharm64.exe','C:\Program Files (x86)\JetBrains\PyCharm*\bin\pycharm64.exe',($env:LOCALAPPDATA + '\Programs\PyCharm*\bin\pycharm64.exe') -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path -First 1)" 2^>nul`) do set "PC_BIN=%%I"
+)
+if defined PC_BIN (
     echo       [OK] PyCharm installed successfully.
 ) else (
     echo       [WARNING] PyCharm installation could not be verified.
@@ -559,9 +576,13 @@ if not exist "%ST_EXE%" (
 )
 
 echo       Installing provided Sublime Text...
-start /wait "" "%ST_EXE%" /S >nul 2>&1
+start /wait "" "%ST_EXE%" /VERYSILENT /NORESTART >nul 2>&1
 ping 127.0.0.1 -n 2 >nul
-if exist "C:\Program Files\Sublime Text\sublime_text.exe" (
+set "ST_BIN="
+if exist "C:\Program Files\Sublime Text\sublime_text.exe" set "ST_BIN=C:\Program Files\Sublime Text\sublime_text.exe"
+if not defined ST_BIN if exist "C:\Program Files (x86)\Sublime Text\sublime_text.exe" set "ST_BIN=C:\Program Files (x86)\Sublime Text\sublime_text.exe"
+if not defined ST_BIN if exist "%LOCALAPPDATA%\Programs\Sublime Text\sublime_text.exe" set "ST_BIN=%LOCALAPPDATA%\Programs\Sublime Text\sublime_text.exe"
+if defined ST_BIN (
     echo       [OK] Sublime Text installed successfully.
 ) else (
     echo       [WARNING] Sublime Text installation could not be verified.
@@ -582,7 +603,7 @@ echo     "editor.fontSize": 15,
 echo     "terminal.integrated.defaultProfile.windows": "Command Prompt",
 echo     "C_Cpp.default.compilerPath": "C:\\MinGW\\bin\\g++.exe",
 echo     "C_Cpp.default.cppStandard": "c++17",
-echo     "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+echo     "C_Cpp.default.intelliSenseMode": "windows-gcc-x86",
 echo     "code-runner.runInTerminal": true,
 echo     "code-runner.saveFileBeforeRun": true,
 echo     "code-runner.saveAllFilesBeforeRun": true,
@@ -591,8 +612,8 @@ echo     "code-runner.preserveFocus": false,
 echo     "code-runner.ignoreSelection": true,
 echo     "code-runner.fileDirectoryAsCwd": true,
 echo     "code-runner.executorMap": {
-echo         "cpp": "cd /d $dirWithoutTrailingSlash && g++ -O2 -std=c++17 $fileName -o $fileNameWithoutExt && $fileNameWithoutExt",
-echo         "c": "cd /d $dirWithoutTrailingSlash && gcc -O2 $fileName -o $fileNameWithoutExt && $fileNameWithoutExt",
+echo         "cpp": "cd /d $dirWithoutTrailingSlash && g++ -O2 -std=c++17 $fileName -o $fileNameWithoutExt -static-libgcc -static-libstdc++ && $fileNameWithoutExt",
+echo         "c": "cd /d $dirWithoutTrailingSlash && gcc -O2 $fileName -o $fileNameWithoutExt -static-libgcc && $fileNameWithoutExt",
 echo         "python": "python -u",
 echo         "java": "cd /d $dirWithoutTrailingSlash && javac $fileName && java $fileNameWithoutExt"
 echo     }
@@ -609,7 +630,7 @@ echo         {
 echo             "label": "Build C++",
 echo             "type": "shell",
 echo             "command": "g++",
-echo             "args": ["-O2", "-std=c++17", "-Wall", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe"],
+echo             "args": ["-O2", "-std=c++17", "-static-libgcc", "-static-libstdc++", "-Wall", "${file}", "-o", "${fileDirname}\\${fileBasenameNoExtension}.exe"],
 echo             "group": {"kind": "build", "isDefault": true},
 echo             "problemMatcher": ["$gcc"]
 echo         }
@@ -649,7 +670,7 @@ echo             "defines": ["_DEBUG", "UNICODE", "_UNICODE", "LOCAL"],
 echo             "compilerPath": "C:/MinGW/bin/g++.exe",
 echo             "cStandard": "c17",
 echo             "cppStandard": "c++17",
-echo             "intelliSenseMode": "windows-gcc-x64"
+echo             "intelliSenseMode": "windows-gcc-x86"
 echo         }
 echo     ],
 echo     "version": 4
@@ -662,7 +683,7 @@ echo using namespace std;
 echo.
 echo int main^(^)
 echo {
-echo     cout^<^<"Welcome to IDPC";
+echo     cout^<^<"Welcome to IDPC"^<^<endl;
 echo.
 echo     return 0;
 echo }
@@ -715,6 +736,7 @@ exit /b 0
 set "CODE_CMD="
 if exist "C:\Program Files\Microsoft VS Code\bin\code.cmd" set "CODE_CMD=C:\Program Files\Microsoft VS Code\bin\code.cmd"
 if not defined CODE_CMD if exist "%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd" set "CODE_CMD=%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd"
+if not defined CODE_CMD if exist "C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd" set "CODE_CMD=C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd"
 if not defined CODE_CMD (
     for /f "delims=" %%G in ('where.exe code.cmd 2^>nul') do if not defined CODE_CMD set "CODE_CMD=%%~fG"
 )
@@ -724,6 +746,18 @@ if exist "C:\Program Files\CodeBlocks\codeblocks.exe" set "CB_BIN=C:\Program Fil
 if not defined CB_BIN if exist "C:\Program Files (x86)\CodeBlocks\codeblocks.exe" set "CB_BIN=C:\Program Files (x86)\CodeBlocks\codeblocks.exe"
 if not defined CB_BIN (
     for /f "delims=" %%G in ('where.exe codeblocks.exe 2^>nul') do if not defined CB_BIN set "CB_BIN=%%~fG"
+)
+
+set "ST_BIN="
+if exist "C:\Program Files\Sublime Text\sublime_text.exe" set "ST_BIN=C:\Program Files\Sublime Text\sublime_text.exe"
+if not defined ST_BIN if exist "C:\Program Files (x86)\Sublime Text\sublime_text.exe" set "ST_BIN=C:\Program Files (x86)\Sublime Text\sublime_text.exe"
+if not defined ST_BIN if exist "%LOCALAPPDATA%\Programs\Sublime Text\sublime_text.exe" set "ST_BIN=%LOCALAPPDATA%\Programs\Sublime Text\sublime_text.exe"
+
+set "PC_BIN="
+if exist "C:\Program Files\JetBrains\PyCharm\bin\pycharm64.exe" set "PC_BIN=C:\Program Files\JetBrains\PyCharm\bin\pycharm64.exe"
+if not defined PC_BIN if exist "C:\Program Files\JetBrains\PyCharm Community Edition\bin\pycharm64.exe" set "PC_BIN=C:\Program Files\JetBrains\PyCharm Community Edition\bin\pycharm64.exe"
+if not defined PC_BIN (
+    for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Resolve-Path 'C:\Program Files\JetBrains\PyCharm*\bin\pycharm64.exe','C:\Program Files (x86)\JetBrains\PyCharm*\bin\pycharm64.exe',($env:LOCALAPPDATA + '\Programs\PyCharm*\bin\pycharm64.exe') -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path -First 1)" 2^>nul`) do set "PC_BIN=%%I"
 )
 
 if defined CODE_CMD (
@@ -739,6 +773,16 @@ if defined CB_BIN (
 ) else (
     echo       [Skipped: Code::Blocks not detected]
 )
+
+if defined ST_BIN (
+    echo       Opening Sublime Text with %CONTEST_DIR%...
+    start "" "!ST_BIN!" "%CONTEST_DIR%" "%CONTEST_DIR%\main.cpp"
+)
+
+if defined PC_BIN (
+    echo       Opening PyCharm with %CONTEST_DIR%...
+    start "" "!PC_BIN!" "%CONTEST_DIR%"
+)
 exit /b 0
 
 
@@ -746,7 +790,7 @@ exit /b 0
 :: HELPER: APPLY FIREWALL LOCKDOWN
 :: =============================================================
 :apply_firewall
-set "BAPSOJ_IPS=185.199.108.153 185.199.109.153 185.199.110.153 185.199.111.153 2a03:b0c0:3:d0::153:68f7"
+set "BAPSOJ_IPS=3.169.64.43 3.169.64.8 3.169.64.95 3.169.64.101 185.199.108.153 185.199.109.153 185.199.110.153 185.199.111.153 2a03:b0c0:3:d0::153:68f7"
 
 for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "'bapsoj.org','www.bapsoj.org','ws.bapsoj.org','uploads.bapsoj.org','static.bapsoj.org','drafts.bapsoj.org','community.bapsoj.org','blog.bapsoj.org','help.bapsoj.org','status.bapsoj.org' | ForEach-Object { (Resolve-DnsName $_ -ErrorAction SilentlyContinue).IPAddress } | Select-Object -Unique" 2^>nul`) do (
     set "BAPSOJ_IPS=!BAPSOJ_IPS! %%A"
