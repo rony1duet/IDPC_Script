@@ -1,6 +1,6 @@
-# Competitive Programming Contest Setup, Code Runner & Toph.co Firewall
+# Competitive Programming Contest Setup, Code Runner & Bapsoj.org Firewall
 
-A minimal, automated installer, cleaner, environment configurator, security lockdown, and firewall blocker for competitive programming contests on **[Toph](https://toph.co)**.
+A minimal, automated installer, cleaner, environment configurator, security lockdown, and firewall blocker for competitive programming contests on **[Bapsoj](https://bapsoj.org/)**.
 
 ---
 
@@ -10,7 +10,7 @@ A minimal, automated installer, cleaner, environment configurator, security lock
 
 ```text
 ==================================================
-  CONTEST SETUP - TOPH.CO FIREWALL and CP LAB
+  CONTEST SETUP - BAPSOJ.ORG FIREWALL and CP LAB
 ==================================================
   [1] Full Contest Setup (Extract, Install, Lock)
   [2] Clean Profile Folders (Keep IDPC_Script)
@@ -18,7 +18,7 @@ A minimal, automated installer, cleaner, environment configurator, security lock
   [4] Extract MinGW and Clean Environment Paths
   [5] Reinstall VS Code, Code::Blocks and Code Runner
   [6] Apply Admin Security and High UAC Policy
-  [7] Lock Internet (Allow ONLY toph.co)
+  [7] Lock Internet (Allow ONLY bapsoj.org)
   [8] Check Status (Firewall, MinGW, Tools, Security)
   [9] Exit
 ==================================================
@@ -31,10 +31,11 @@ A minimal, automated installer, cleaner, environment configurator, security lock
   4. **Clean environment variable paths** (strips old/stale MinGW, CodeBlocks, and VS Code paths, registers fresh `C:\MinGW\bin`).
   5. **Reinstall Code::Blocks IDE & Visual Studio Code** using the provided installers.
   6. **Install Code Runner extension** in VS Code **before** internet is blocked and configure CP environment (`Desktop\Contest`).
-  7. **Deploy Hidden Recovery Utility**: Copies `.SYSTEM` to `C:\.SYSTEM` (marked hidden) containing `restore.bat`.
-  8. **Lock down Administrative Security**: Configures admin credentials in background (password hidden from display) and enforces **High UAC Policy** (credentials prompt on secure desktop).
-  9. **Lock Firewall**: Allows ONLY `https://toph.co` and contest-essential services (DNS, DHCP, loopback).
-  10. **Auto-Launch IDEs**: Automatically opens the `Desktop\Contest` workspace and `main.cpp` in both Visual Studio Code and Code::Blocks so the contest setup can be verified instantly.
+  7. **Install PyCharm IDE** and **Sublime Text** editors.
+  8. **Deploy Hidden Unlock Script**: Copies `unlock.bat` to `C:\Program Files\.unlock` (marked hidden).
+  9. **Lock down Administrative Security**: Enforces **High UAC Policy** (credentials prompt on secure desktop). No extra user accounts are created.
+  10. **Lock Firewall**: Allows ONLY `https://bapsoj.org/` and contest-essential services (DNS, DHCP, loopback).
+  11. **Auto-Launch IDEs**: Automatically opens the `Desktop\Contest` workspace and `main.cpp` in Visual Studio Code, Code::Blocks, PyCharm, and Sublime Text.
 
 ---
 
@@ -44,32 +45,32 @@ A minimal, automated installer, cleaner, environment configurator, security lock
 IDPC_Script/
 ├── setup.bat              # Main automated script (installer, cleaner, security, firewall)
 ├── README.md              # Documentation
-├── .SYSTEM/               # Hidden recovery directory (kept isolated from participants)
-│   └── restore.bat        # Standalone recovery utility (restores firewall, sets UAC to Low)
-└── software/              # Installers & packages folder
+├── .SYSTEM/               # Hidden recovery directory (source of the unlock script)
+│   └── unlock.bat        # Standalone unlock utility (restores firewall, sets UAC to Low)
+└── software/              # Installers & packages folder (NOT committed - gitignored)
     ├── MinGW.zip          # Full MinGW GCC distribution with <bits/stdc++.h>
     ├── codeblocks.exe     # Code::Blocks IDE Installer
     ├── VSCode.exe         # Visual Studio Code Installer
-    └── code-runner.vsix   # Code Runner extension (offline installation bundle)
+    ├── code-runner.vsix   # Code Runner extension (offline installation bundle)
+    ├── PyCharm.exe        # PyCharm IDE installer
+    └── SublimeText.exe    # Sublime Text installer
 ```
 
-*(Note: During setup, `.SYSTEM` is also deployed to `C:\.SYSTEM` as a hidden system directory).*
+*(Note: During setup, `unlock.bat` is deployed to `C:\Program Files\.unlock` as a hidden system directory).*
 
 ---
 
 ## 🔒 Security Lockdown & Anti-Cheating
 
-1. **Admin Password & High UAC Policy**:
-   - The built-in Administrator and any password-less admin accounts are secured.
-   - **Password Security**: The administrator password is never displayed on the console during script execution to prevent visibility to bystanders.
-   - **High UAC Enforcement**: UAC is configured to **Prompt for Credentials on the Secure Desktop** (`ConsentPromptBehaviorAdmin = 1`, `PromptOnSecureDesktop = 1`).
+1. **High UAC Policy**:
+   - UAC is configured to **Prompt for Credentials on the Secure Desktop** (`ConsentPromptBehaviorAdmin = 1`, `PromptOnSecureDesktop = 1`).
    - If any participant attempts to open an elevated command prompt, run administrative scripts, or alter network settings, Windows requires the administrator password.
+   - **No extra user accounts are created or modified.**
 
-2. **Hidden Recovery Script (`C:\.SYSTEM\restore.bat`)**:
-   - The restore/unlock routine is isolated inside a **hidden** directory on both the repository and `C:\.SYSTEM`.
-   - Participants viewing the contest folder will not see `.SYSTEM`.
-   - Contest organizers can run [`.SYSTEM\restore.bat`](file:///e:/github.com/IDPC_Script/.SYSTEM/restore.bat) or `C:\.SYSTEM\restore.bat` post-contest.
-   - **Automatic Low UAC Reset**: When `restore.bat` is executed, it removes all firewall restrictions, restores full internet access, and **sets UAC back to Low** (`ConsentPromptBehaviorAdmin = 0`, `PromptOnSecureDesktop = 0`).
+2. **Hidden Unlock Script (`C:\Program Files\.unlock\unlock.bat`)**:
+   - The unlock routine is isolated inside a **hidden** directory in `C:\Program Files`.
+   - Contest organizers can run `C:\Program Files\.unlock\unlock.bat` post-contest.
+   - **Automatic Low UAC Reset**: When `unlock.bat` is executed, it removes all firewall restrictions, restores full internet access, and **sets UAC back to Low** (`ConsentPromptBehaviorAdmin = 0`, `PromptOnSecureDesktop = 0`).
 
 3. **Workspace Sanitization**:
    - Deletes prior downloads, solutions, and temporary files from user profiles (`Desktop`, `Downloads`, `Documents`, `Pictures`, `Videos`, `Music`).
@@ -125,8 +126,7 @@ The workspace is automatically created and populated with:
 ## 🔒 Firewall Lockdown Rules
 
 - **Allowed**:
-  - `https://toph.co` and all subdomains (`*.toph.co`):
-    - `toph.co`, `www.toph.co`, `ws.toph.co`, `uploads.toph.co`, `static.toph.co`, `drafts.toph.co`, `community.toph.co`, `blog.toph.co`, `help.toph.co`, `status.toph.co`.
+  - `https://bapsoj.org/` and all subdomains (`*.bapsoj.org`).
   - DNS (Port 53 UDP/TCP) for domain resolution.
   - DHCP (Port 67/68 UDP) for dynamic IP assignment.
   - Localhost loopback (`127.0.0.1` and `::1`) for VS Code IPC and GDB debugging.
@@ -145,6 +145,7 @@ The workspace is automatically created and populated with:
 | **Extract MinGW & Clean PATH** | `setup.bat 4` (or `setup.bat mingw`) |
 | **Reinstall IDEs & Code Runner** | `setup.bat 5` (or `setup.bat reinstall`) |
 | **Apply Admin Security & UAC** | `setup.bat 6` (or `setup.bat security`) |
-| **Lock Internet (Toph Only)** | `setup.bat 7` (or `setup.bat lock`) |
+| **Lock Internet (Bapsoj Only)** | `setup.bat 7` (or `setup.bat lock`) |
 | **Check Status & Environment** | `setup.bat 8` (or `setup.bat status`) |
-| **Restore Full Access & Low UAC** | `setup.bat restore` (or run `C:\.SYSTEM\restore.bat`) |
+| **Restore Full Access & Low UAC** | `setup.bat restore` (or run `C:\Program Files\.unlock\unlock.bat`) |
+| **Unlock Internet** | `setup.bat unlock` |

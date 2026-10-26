@@ -1,14 +1,15 @@
 @echo off
 setlocal enabledelayedexpansion
-title Contest Setup - Toph.co Firewall and CP Lab
+title Contest Setup - Bapsoj.org Firewall and CP Lab
 
 set "ROOT=%~dp0"
 set "CB_EXE=%ROOT%software\codeblocks.exe"
 set "VS_EXE=%ROOT%software\VSCode.exe"
 set "CR_VSIX=%ROOT%software\code-runner.vsix"
 set "MINGW_ZIP=%ROOT%software\MinGW.zip"
-set "RESTORE_BAT=%ROOT%.SYSTEM\restore.bat"
-set "RESTORE_BAT_C=C:\.SYSTEM\restore.bat"
+set "UNLOCK_BAT=%ROOT%.SYSTEM\unlock.bat"
+set "UNLOCK_DIR=C:\Program Files\.unlock"
+set "UNLOCK_BAT=%UNLOCK_DIR%\unlock.bat"
 set "CONTEST_DIR=%USERPROFILE%\Desktop\Contest"
 set "ARG=%~1"
 
@@ -33,13 +34,13 @@ if /i "%ARG%"=="status" goto status_only
 if /i "%ARG%"=="8" goto status_only
 if /i "%ARG%"=="cp" goto cp_only
 if /i "%ARG%"=="configure-cp" goto cp_only
-if /i "%ARG%"=="unlock" goto call_restore
-if /i "%ARG%"=="restore" goto call_restore
+if /i "%ARG%"=="unlock" goto call_unlock
+if /i "%ARG%"=="restore" goto call_unlock
 
 :menu
 cls
 echo ==================================================
-echo   CONTEST SETUP - TOPH.CO FIREWALL and CP LAB
+echo   CONTEST SETUP - BAPSOJ.ORG FIREWALL and CP LAB
 echo ==================================================
 echo   [1] Full Contest Setup (Extract, Install, Lock)
 echo   [2] Clean Profile Folders (Keep IDPC_Script)
@@ -47,7 +48,7 @@ echo   [3] Remove Offline AI Tools (Ollama, LM Studio)
 echo   [4] Extract MinGW and Clean Environment Paths
 echo   [5] Reinstall VS Code, Code::Blocks and Code Runner
 echo   [6] Apply Admin Security and High UAC Policy
-echo   [7] Lock Internet (Allow ONLY toph.co)
+echo   [7] Lock Internet (Allow ONLY bapsoj.org)
 echo   [8] Check Status (Firewall, MinGW, Tools, Security)
 echo   [9] Exit
 echo ==================================================
@@ -76,38 +77,46 @@ echo   AUTOMATED CONTEST ENVIRONMENT SETUP
 echo ==================================================
 echo.
 
-echo [1/8] Cleaning user folders (Desktop, Downloads, etc.)...
+echo [1/10] Cleaning user folders (Desktop, Downloads, etc.)...
 call :clean_user_folders
 echo       Done.
 
-echo [2/8] Checking for and removing offline AI tools (Ollama, etc.)...
+echo [2/10] Checking for and removing offline AI tools (Ollama, etc.)...
 call :remove_offline_ai
 echo       Done.
 
-echo [3/8] Extracting MinGW (bits/stdc++.h support) and configuring PATH...
+echo [3/10] Extracting MinGW (bits/stdc++.h support) and configuring PATH...
 call :extract_mingw
 call :clean_environment_paths
 echo       Done.
 
-echo [4/8] Installing Code::Blocks IDE...
+echo [4/10] Installing Code::Blocks IDE...
 call :install_codeblocks
 echo       Done.
 
-echo [5/8] Installing Visual Studio Code and Code Runner Extension...
+echo [5/10] Installing Visual Studio Code and Code Runner Extension...
 call :install_vscode
 call :install_coderunner
 call :configure_cp
 echo       Done.
 
-echo [6/8] Deploying Hidden Recovery Utility to C:\.SYSTEM...
-call :deploy_recovery
+echo [6/10] Installing PyCharm IDE...
+call :install_pycharm
 echo       Done.
 
-echo [7/8] Applying Admin Security and High UAC Policy...
+echo [7/10] Installing Sublime Text...
+call :install_sublime
+echo       Done.
+
+echo [8/10] Deploying Unlock Script to C:\Program Files\.unlock...
+call :deploy_unlock
+echo       Done.
+
+echo [9/10] Applying Admin Security and High UAC Policy...
 call :apply_security_policy
 echo       Done.
 
-echo [8/8] Locking Firewall (Allow ONLY toph.co)...
+echo [10/10] Locking Firewall (Allow ONLY bapsoj.org)...
 call :apply_firewall
 echo       Done.
 
@@ -117,9 +126,9 @@ echo   CONTEST SETUP COMPLETE
 echo   Workspace:    "%CONTEST_DIR%"
 echo   Compiler:     C:\MinGW\bin\g++.exe (bits/stdc++.h READY)
 echo   Code Runner:  Installed and Configured (Terminal: ON)
-echo   Security:     Admin Password configured, High UAC active
-echo   Firewall:     LOCKED - ONLY https://toph.co is accessible
-echo   Recovery:     Deployed to C:\.SYSTEM\restore.bat (Hidden)
+echo   Security:     High UAC active (no extra user accounts)
+echo   Firewall:     LOCKED - ONLY https://bapsoj.org is accessible
+echo   Unlock Script: Deployed to C:\Program Files\.unlock\unlock.bat (Hidden)
 echo ==================================================
 echo.
 
@@ -183,11 +192,13 @@ goto menu
 :: =============================================================
 :reinstall_only
 cls
-echo Reinstalling Code::Blocks, VS Code, and Code Runner...
+echo Reinstalling Code::Blocks, VS Code, Code Runner, PyCharm, and Sublime Text...
 call :clean_environment_paths
 call :install_codeblocks
 call :install_vscode
 call :install_coderunner
+call :install_pycharm
+call :install_sublime
 call :configure_cp
 echo.
 echo [*] Opening Contest Workspace in VS Code and Code::Blocks...
@@ -217,15 +228,15 @@ goto menu
 
 
 :: =============================================================
-:: 7. LOCK FIREWALL (TOPH.CO ONLY)
+:: 7. LOCK FIREWALL (BAPSOJ.ORG ONLY)
 :: =============================================================
 :lock_only
 call :require_admin
 cls
-echo Locking firewall (Allow ONLY toph.co)...
+echo Locking firewall (Allow ONLY bapsoj.org)...
 call :apply_firewall
 echo.
-echo [OK] Firewall locked - all websites blocked except toph.co.
+echo [OK] Firewall locked - all websites blocked except bapsoj.org.
 echo.
 if not "!ARG!"=="" exit /b 0
 pause
@@ -233,15 +244,15 @@ goto menu
 
 
 :: =============================================================
-:: CALL RESTORE SCRIPT FROM HIDDEN .SYSTEM FOLDER
+:: CALL UNLOCK SCRIPT FROM HIDDEN .unlock FOLDER
 :: =============================================================
-:call_restore
-if exist "%RESTORE_BAT_C%" (
-    call "%RESTORE_BAT_C%"
-) else if exist "%RESTORE_BAT%" (
-    call "%RESTORE_BAT%"
+:call_unlock
+if exist "%UNLOCK_BAT%" (
+    call "%UNLOCK_BAT%"
+) else if exist "%ROOT%.SYSTEM\unlock.bat" (
+    call "%ROOT%.SYSTEM\unlock.bat"
 ) else (
-    echo [ERROR] Restore script not found in C:\.SYSTEM\restore.bat or .SYSTEM\restore.bat
+    echo [ERROR] Unlock script not found at C:\Program Files\.unlock\unlock.bat or .SYSTEM\unlock.bat
     pause
 )
 exit /b 0
@@ -256,20 +267,21 @@ echo ==================================================
 echo   CONTEST STATUS and ENVIRONMENT INSPECTION
 echo ==================================================
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$fw = (netsh advfirewall show currentprofile firewallpolicy 2>$null) -join ' ';" ^
-    "$isBlocked = $fw -match 'BlockInbound,BlockOutbound';" ^
-    "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - ONLY TOPH.CO ALLOWED]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
-    "try { $t = Invoke-WebRequest -Uri 'https://toph.co' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Toph.co Access:    [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Toph.co Access:    [FAIL] Unreachable' -ForegroundColor Red };" ^
-    "try { $g = Invoke-WebRequest -Uri 'https://www.google.com' -Method GET -UseBasicParsing -TimeoutSec 3; if ($isBlocked) { Write-Host '  External Sites:    [WARNING] Reachable' -ForegroundColor Yellow } else { Write-Host '  External Sites:    [PASS] Reachable (Normal mode)' -ForegroundColor Gray } } catch { if ($isBlocked) { Write-Host '  External Sites:    [BLOCKED] All others blocked' -ForegroundColor Green } else { Write-Host '  External Sites:    [FAIL] Unreachable' -ForegroundColor Gray } };" ^
     "$hasBits = Test-Path 'C:\MinGW\lib\gcc\mingw32\6.3.0\include\c++\mingw32\bits\stdc++.h'; if ($hasBits) { Write-Host '  MinGW (bits):      [PASS] C:\MinGW\bin\g++.exe (bits/stdc++.h OK)' -ForegroundColor Green } else { Write-Host '  MinGW (bits):      [NOT READY] Extract MinGW.zip' -ForegroundColor Yellow };" ^
     "$cbOk = Test-Path 'C:\Program Files\CodeBlocks\codeblocks.exe'; if ($cbOk) { Write-Host '  Code::Blocks IDE:  [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Code::Blocks IDE:  [NOT FOUND]' -ForegroundColor Yellow };" ^
     "$cCmd = $null; @('C:\Program Files\Microsoft VS Code\bin\code.cmd', ($env:LOCALAPPDATA + '\Programs\Microsoft VS Code\bin\code.cmd')) | ForEach-Object { if (-not $cCmd -and (Test-Path $_)) { $cCmd = $_ } }; if (-not $cCmd) { $c = Get-Command code.cmd -ErrorAction SilentlyContinue; if ($c) { $cCmd = $c.Source } };" ^
     "if ($cCmd) { Write-Host '  VS Code:           [PASS] Installed' -ForegroundColor Green } else { Write-Host '  VS Code:           [NOT FOUND]' -ForegroundColor Yellow };" ^
+    "$pyOk = Get-Command pycharm64.exe -ErrorAction SilentlyContinue; if ($pyOk) { Write-Host '  PyCharm IDE:         [PASS] Installed' -ForegroundColor Green } else { Write-Host '  PyCharm IDE:         [NOT FOUND]' -ForegroundColor Yellow };" ^
+    "$stOk = Test-Path 'C:\Program Files\Sublime Text\sublime_text.exe'; if ($stOk) { Write-Host '  Sublime Text:      [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Sublime Text:      [NOT FOUND]' -ForegroundColor Yellow };" ^
     "$hasCR = Test-Path ($env:USERPROFILE + '\.vscode\extensions\formulahendry.code-runner*'); if ($hasCR) { Write-Host '  Code Runner Ext:   [PASS] Installed' -ForegroundColor Green } else { Write-Host '  Code Runner Ext:   [MISSING] Not installed' -ForegroundColor Red };" ^
     "$aiFound = $false; if (Get-Process -Name 'ollama*' -ErrorAction SilentlyContinue) { $aiFound = $true }; if (Test-Path ($env:LOCALAPPDATA + '\Programs\Ollama')) { $aiFound = $true }; if (Test-Path ($env:USERPROFILE + '\.ollama')) { $aiFound = $true }; if ($aiFound) { Write-Host '  Offline AI Tools:  [DETECTED] Ollama/AI files present' -ForegroundColor Red } else { Write-Host '  Offline AI Tools:  [PASS] Clean (None found)' -ForegroundColor Green };" ^
     "$uac = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -ErrorAction SilentlyContinue).ConsentPromptBehaviorAdmin; if ($uac -eq 1) { Write-Host '  Security Policy:   [HIGH] Admin Security and UAC Credentials Prompt Active' -ForegroundColor Green } else { Write-Host ('  Security Policy:   [NORMAL] UAC Level: ' + $uac) -ForegroundColor Gray };" ^
     "$cDir = Join-Path $env:USERPROFILE 'Desktop\Contest'; if (Test-Path $cDir) { Write-Host ('  Workspace:         [READY] ' + $cDir) -ForegroundColor Green } else { Write-Host '  Workspace:         [NOT CREATED]' -ForegroundColor Gray };" ^
-    "$hasRest = (Test-Path 'C:\.SYSTEM\restore.bat') -or (Test-Path (Join-Path '%ROOT%' '.SYSTEM\restore.bat')); if ($hasRest) { Write-Host '  Recovery Script:   [READY] Hidden in C:\.SYSTEM\restore.bat' -ForegroundColor Green } else { Write-Host '  Recovery Script:   [MISSING]' -ForegroundColor Red }"
+    "$hasUnl = (Test-Path 'C:\Program Files\.unlock\unlock.bat') -or (Test-Path (Join-Path '%ROOT%' '.SYSTEM\unlock.bat')); if ($hasUnl) { Write-Host '  Unlock Script:     [READY] C:\Program Files\.unlock\unlock.bat' -ForegroundColor Green } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
+    "$fw = (netsh advfirewall show currentprofile firewallpolicy 2>$null) -join ' ';" ^
+    "$isBlocked = $fw -match 'BlockInbound,BlockOutbound';" ^
+    "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - ONLY BAPSOJ.ORG ALLOWED]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
+    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Bapsoj.org Access:  [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Bapsoj.org Access:  [FAIL] Unreachable' -ForegroundColor Red };"
 echo ==================================================
 echo.
 if not "!ARG!"=="" exit /b 0
@@ -513,6 +525,48 @@ exit /b 0
 
 
 :: =============================================================
+:: HELPER: INSTALL PYTHON BASIC IDE (IDLE)
+:: =============================================================
+:install_pycharm
+set "PC_EXE=%ROOT%software\PyCharm.exe"
+if not exist "%PC_EXE%" (
+    echo       [Skipped: PyCharm installer not found in software\]
+    exit /b 0
+)
+
+echo       Installing provided PyCharm IDE...
+start /wait "" "%PC_EXE%" /S >nul 2>&1
+ping 127.0.0.1 -n 2 >nul
+if exist "C:\Program Files\JetBrains\PyCharm*\bin\pycharm64.exe" (
+    echo       [OK] PyCharm installed successfully.
+) else (
+    echo       [WARNING] PyCharm installation could not be verified.
+)
+exit /b 0
+
+
+:: =============================================================
+:: HELPER: INSTALL SUBLIME TEXT
+:: =============================================================
+:install_sublime
+set "ST_EXE=%ROOT%software\SublimeText.exe"
+if not exist "%ST_EXE%" (
+    echo       [Skipped: Sublime Text installer not found in software\]
+    exit /b 0
+)
+
+echo       Installing provided Sublime Text...
+start /wait "" "%ST_EXE%" /S >nul 2>&1
+ping 127.0.0.1 -n 2 >nul
+if exist "C:\Program Files\Sublime Text\sublime_text.exe" (
+    echo       [OK] Sublime Text installed successfully.
+) else (
+    echo       [WARNING] Sublime Text installation could not be verified.
+)
+exit /b 0
+
+
+:: =============================================================
 :: HELPER: CONFIGURE C++ CP ENVIRONMENT & CONTEST WORKSPACE
 :: =============================================================
 :configure_cp
@@ -620,15 +674,15 @@ exit /b 0
 
 
 :: =============================================================
-:: HELPER: DEPLOY HIDDEN RECOVERY UTILITY TO C:\.SYSTEM
+:: HELPER: DEPLOY HIDDEN UNLOCK SCRIPT TO C:\Program Files\.unlock
 :: =============================================================
-:deploy_recovery
-if not exist "C:\.SYSTEM" mkdir "C:\.SYSTEM" >nul 2>&1
-if exist "%ROOT%.SYSTEM\restore.bat" (
-    copy /y "%ROOT%.SYSTEM\restore.bat" "C:\.SYSTEM\restore.bat" >nul 2>&1
+:deploy_unlock
+if not exist "%UNLOCK_DIR%" mkdir "%UNLOCK_DIR%" >nul 2>&1
+if exist "%ROOT%.SYSTEM\unlock.bat" (
+    copy /y "%ROOT%.SYSTEM\unlock.bat" "%UNLOCK_BAT%" >nul 2>&1
 )
-attrib +h "C:\.SYSTEM" >nul 2>&1
-if exist "%ROOT%.SYSTEM" attrib +h "%ROOT%.SYSTEM" >nul 2>&1
+attrib +h "%UNLOCK_DIR%" >nul 2>&1
+attrib +h "%UNLOCK_BAT%" >nul 2>&1
 exit /b 0
 
 
@@ -636,21 +690,9 @@ exit /b 0
 :: HELPER: SET ADMIN SECURITY & HIGH UAC POLICY
 :: =============================================================
 :apply_security_policy
-echo       Configuring Administrator security...
-net user Administrator /active:yes >nul 2>&1
-net user Administrator "@DMIN_idpc" >nul 2>&1
+echo       Applying High UAC security policy (no extra user accounts)...
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$admins = Get-LocalGroupMember -Group 'Administrators' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name;" ^
-    "Get-LocalUser -ErrorAction SilentlyContinue | ForEach-Object {" ^
-    "    $full = ($env:COMPUTERNAME + '\' + $_.Name);" ^
-    "    if ($admins -contains $full -or $admins -contains $_.Name -or $_.Name -eq 'Administrator') {" ^
-    "        try {" ^
-    "            Set-LocalUser -Name $_.Name -Password (ConvertTo-SecureString '@DMIN_idpc' -AsPlainText -Force) -ErrorAction SilentlyContinue;" ^
-    "            Enable-LocalUser -Name $_.Name -ErrorAction SilentlyContinue;" ^
-    "        } catch {}" ^
-    "    }" ^
-    "};" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableLUA' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorUser' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
@@ -659,7 +701,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableInstallerDetection' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableSecureUIAPaths' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableVirtualization' -Value 1 -Force -ErrorAction SilentlyContinue;" ^
-    "Write-Host '       Administrator security configured. High UAC policy applied.' -ForegroundColor Green;"
+    "Write-Host '       High UAC policy applied. No extra user accounts created.' -ForegroundColor Green;"
 exit /b 0
 
 
@@ -701,27 +743,27 @@ exit /b 0
 :: HELPER: APPLY FIREWALL LOCKDOWN
 :: =============================================================
 :apply_firewall
-set "TOPH_IPS=172.104.40.125 2400:8901::2000:26ff:fe31:c05e 159.89.98.98 2a03:b0c0:3:d0::ec0:3001"
+set "BAPSOJ_IPS=185.199.108.153 185.199.109.153 185.199.110.153 185.199.111.153 2a03:b0c0:3:d0::153:68f7"
 
-for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "'toph.co','www.toph.co','ws.toph.co','uploads.toph.co','static.toph.co','drafts.toph.co','community.toph.co','blog.toph.co','help.toph.co','status.toph.co' | ForEach-Object { (Resolve-DnsName $_ -ErrorAction SilentlyContinue).IPAddress } | Select-Object -Unique" 2^>nul`) do (
-    set "TOPH_IPS=!TOPH_IPS! %%A"
+for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "'bapsoj.org','www.bapsoj.org','ws.bapsoj.org','uploads.bapsoj.org','static.bapsoj.org','drafts.bapsoj.org','community.bapsoj.org','blog.bapsoj.org','help.bapsoj.org','status.bapsoj.org' | ForEach-Object { (Resolve-DnsName $_ -ErrorAction SilentlyContinue).IPAddress } | Select-Object -Unique" 2^>nul`) do (
+    set "BAPSOJ_IPS=!BAPSOJ_IPS! %%A"
 )
 
-netsh advfirewall firewall delete rule name="TOPH_DNS_UDP" >nul 2>&1
-netsh advfirewall firewall delete rule name="TOPH_DNS_TCP" >nul 2>&1
-netsh advfirewall firewall delete rule name="TOPH_DHCP_UDP" >nul 2>&1
-netsh advfirewall firewall delete rule name="TOPH_LOOPBACK_V4" >nul 2>&1
-netsh advfirewall firewall delete rule name="TOPH_LOOPBACK_V6" >nul 2>&1
-netsh advfirewall firewall delete rule name="TOPH_ALLOW_SITE" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_DNS_UDP" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_DNS_TCP" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_DHCP_UDP" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_LOOPBACK_V4" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_LOOPBACK_V6" >nul 2>&1
+netsh advfirewall firewall delete rule name="BAPSOJ_ALLOW_SITE" >nul 2>&1
 
-netsh advfirewall firewall add rule name="TOPH_DNS_UDP" dir=out action=allow protocol=UDP remoteport=53 >nul
-netsh advfirewall firewall add rule name="TOPH_DNS_TCP" dir=out action=allow protocol=TCP remoteport=53 >nul
-netsh advfirewall firewall add rule name="TOPH_DHCP_UDP" dir=out action=allow protocol=UDP localport=68 remoteport=67 >nul
-netsh advfirewall firewall add rule name="TOPH_LOOPBACK_V4" dir=out action=allow remoteip=127.0.0.1 >nul
-netsh advfirewall firewall add rule name="TOPH_LOOPBACK_V6" dir=out action=allow remoteip=::1 >nul
+netsh advfirewall firewall add rule name="BAPSOJ_DNS_UDP" dir=out action=allow protocol=UDP remoteport=53 >nul
+netsh advfirewall firewall add rule name="BAPSOJ_DNS_TCP" dir=out action=allow protocol=TCP remoteport=53 >nul
+netsh advfirewall firewall add rule name="BAPSOJ_DHCP_UDP" dir=out action=allow protocol=UDP localport=68 remoteport=67 >nul
+netsh advfirewall firewall add rule name="BAPSOJ_LOOPBACK_V4" dir=out action=allow remoteip=127.0.0.1 >nul
+netsh advfirewall firewall add rule name="BAPSOJ_LOOPBACK_V6" dir=out action=allow remoteip=::1 >nul
 
-for %%I in (!TOPH_IPS!) do (
-    netsh advfirewall firewall add rule name="TOPH_ALLOW_SITE" dir=out action=allow protocol=TCP remoteport=80,443 remoteip=%%I >nul
+for %%I in (!BAPSOJ_IPS!) do (
+    netsh advfirewall firewall add rule name="BAPSOJ_ALLOW_SITE" dir=out action=allow protocol=TCP remoteport=80,443 remoteip=%%I >nul
 )
 
 netsh advfirewall set allprofiles state on >nul
