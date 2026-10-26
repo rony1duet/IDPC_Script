@@ -7,7 +7,6 @@ set "CB_EXE=%ROOT%software\codeblocks.exe"
 set "VS_EXE=%ROOT%software\VSCode.exe"
 set "CR_VSIX=%ROOT%software\code-runner.vsix"
 set "MINGW_ZIP=%ROOT%software\MinGW.zip"
-set "UNLOCK_BAT=%ROOT%.SYSTEM\unlock.bat"
 set "UNLOCK_DIR=C:\Program Files\.unlock"
 set "UNLOCK_BAT=%UNLOCK_DIR%\unlock.bat"
 set "CONTEST_DIR=%USERPROFILE%\Desktop\Contest"
@@ -46,11 +45,15 @@ echo   [1] Full Contest Setup (Extract, Install, Lock)
 echo   [2] Clean Profile Folders (Keep IDPC_Script)
 echo   [3] Remove Offline AI Tools (Ollama, LM Studio)
 echo   [4] Extract MinGW and Clean Environment Paths
-echo   [5] Reinstall VS Code, Code::Blocks and Code Runner
+echo   [5] Reinstall Code::Blocks, VS Code, PyCharm, Sublime Text
 echo   [6] Apply Admin Security and High UAC Policy
 echo   [7] Lock Internet (Allow ONLY bapsoj.org)
 echo   [8] Check Status (Firewall, MinGW, Tools, Security)
 echo   [9] Exit
+echo ==================================================
+echo   Allowed Website: https://bapsoj.org/ only
+echo   Editors: Code::Blocks | VS Code | PyCharm | Sublime Text
+echo   Unlock: C:\Program Files\.unlock\unlock.bat
 echo ==================================================
 set /p choice="Select option [1-9]: "
 
@@ -249,10 +252,10 @@ goto menu
 :call_unlock
 if exist "%UNLOCK_BAT%" (
     call "%UNLOCK_BAT%"
-) else if exist "%ROOT%.SYSTEM\unlock.bat" (
-    call "%ROOT%.SYSTEM\unlock.bat"
+) else if exist "%ROOT%.unlock\unlock.bat" (
+    call "%ROOT%.unlock\unlock.bat"
 ) else (
-    echo [ERROR] Unlock script not found at C:\Program Files\.unlock\unlock.bat or .SYSTEM\unlock.bat
+    echo [ERROR] Unlock script not found at C:\Program Files\.unlock\unlock.bat or .unlock\unlock.bat
     pause
 )
 exit /b 0
@@ -277,7 +280,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$aiFound = $false; if (Get-Process -Name 'ollama*' -ErrorAction SilentlyContinue) { $aiFound = $true }; if (Test-Path ($env:LOCALAPPDATA + '\Programs\Ollama')) { $aiFound = $true }; if (Test-Path ($env:USERPROFILE + '\.ollama')) { $aiFound = $true }; if ($aiFound) { Write-Host '  Offline AI Tools:  [DETECTED] Ollama/AI files present' -ForegroundColor Red } else { Write-Host '  Offline AI Tools:  [PASS] Clean (None found)' -ForegroundColor Green };" ^
     "$uac = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -ErrorAction SilentlyContinue).ConsentPromptBehaviorAdmin; if ($uac -eq 1) { Write-Host '  Security Policy:   [HIGH] Admin Security and UAC Credentials Prompt Active' -ForegroundColor Green } else { Write-Host ('  Security Policy:   [NORMAL] UAC Level: ' + $uac) -ForegroundColor Gray };" ^
     "$cDir = Join-Path $env:USERPROFILE 'Desktop\Contest'; if (Test-Path $cDir) { Write-Host ('  Workspace:         [READY] ' + $cDir) -ForegroundColor Green } else { Write-Host '  Workspace:         [NOT CREATED]' -ForegroundColor Gray };" ^
-    "$hasUnl = (Test-Path 'C:\Program Files\.unlock\unlock.bat') -or (Test-Path (Join-Path '%ROOT%' '.SYSTEM\unlock.bat')); if ($hasUnl) { Write-Host '  Unlock Script:     [READY] C:\Program Files\.unlock\unlock.bat' -ForegroundColor Green } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
+    "$hasUnl = (Test-Path 'C:\Program Files\.unlock\unlock.bat') -or (Test-Path (Join-Path '%ROOT%' '.unlock\unlock.bat')); if ($hasUnl) { Write-Host '  Unlock Script:     [READY] C:\Program Files\.unlock\unlock.bat' -ForegroundColor Green } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
     "$fw = (netsh advfirewall show currentprofile firewallpolicy 2>$null) -join ' ';" ^
     "$isBlocked = $fw -match 'BlockInbound,BlockOutbound';" ^
     "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - ONLY BAPSOJ.ORG ALLOWED]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
@@ -678,8 +681,8 @@ exit /b 0
 :: =============================================================
 :deploy_unlock
 if not exist "%UNLOCK_DIR%" mkdir "%UNLOCK_DIR%" >nul 2>&1
-if exist "%ROOT%.SYSTEM\unlock.bat" (
-    copy /y "%ROOT%.SYSTEM\unlock.bat" "%UNLOCK_BAT%" >nul 2>&1
+if exist "%ROOT%.unlock\unlock.bat" (
+    copy /y "%ROOT%.unlock\unlock.bat" "%UNLOCK_BAT%" >nul 2>&1
 )
 attrib +h "%UNLOCK_DIR%" >nul 2>&1
 attrib +h "%UNLOCK_BAT%" >nul 2>&1

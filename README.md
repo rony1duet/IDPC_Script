@@ -8,21 +8,25 @@ A minimal, automated installer, cleaner, environment configurator, security lock
 
 👉 **Run:** **`setup.bat`** (Run as Administrator)
 
-```text
-==================================================
-  CONTEST SETUP - BAPSOJ.ORG FIREWALL and CP LAB
-==================================================
-  [1] Full Contest Setup (Extract, Install, Lock)
-  [2] Clean Profile Folders (Keep IDPC_Script)
-  [3] Remove Offline AI Tools (Ollama, LM Studio)
-  [4] Extract MinGW and Clean Environment Paths
-  [5] Reinstall VS Code, Code::Blocks and Code Runner
-  [6] Apply Admin Security and High UAC Policy
-  [7] Lock Internet (Allow ONLY bapsoj.org)
-  [8] Check Status (Firewall, MinGW, Tools, Security)
-  [9] Exit
-==================================================
-```
+ ```text
+ ==================================================
+   CONTEST SETUP - BAPSOJ.ORG FIREWALL and CP LAB
+ ==================================================
+   [1] Full Contest Setup (Extract, Install, Lock)
+   [2] Clean Profile Folders (Keep IDPC_Script)
+   [3] Remove Offline AI Tools (Ollama, LM Studio)
+   [4] Extract MinGW and Clean Environment Paths
+   [5] Reinstall Code::Blocks, VS Code, PyCharm, Sublime Text
+   [6] Apply Admin Security and High UAC Policy
+   [7] Lock Internet (Allow ONLY bapsoj.org)
+   [8] Check Status (Firewall, MinGW, Tools, Security)
+   [9] Exit
+ ==================================================
+   Allowed Website: https://bapsoj.org/ only
+   Editors: Code::Blocks | VS Code | PyCharm | Sublime Text
+   Unlock: C:\Program Files\.unlock\unlock.bat
+ ==================================================
+ ```
 
 - Select **`[1]`** to execute the complete end-to-end preparation for contest machines:
   1. **Clean user folders** (`Desktop`, `Downloads`, `Documents`, `Pictures`, `Videos`, `Music`) while safely preserving `IDPC_Script`.
@@ -45,7 +49,7 @@ A minimal, automated installer, cleaner, environment configurator, security lock
 IDPC_Script/
 ├── setup.bat              # Main automated script (installer, cleaner, security, firewall)
 ├── README.md              # Documentation
-├── .SYSTEM/               # Hidden recovery directory (source of the unlock script)
+├── .unlock/               # Hidden unlock script source directory
 │   └── unlock.bat        # Standalone unlock utility (restores firewall, sets UAC to Low)
 └── software/              # Installers & packages folder (NOT committed - gitignored)
     ├── MinGW.zip          # Full MinGW GCC distribution with <bits/stdc++.h>
