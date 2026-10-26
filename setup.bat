@@ -52,7 +52,7 @@ echo   [8] Check Status (Firewall, MinGW, Tools, Security)
 echo   [9] Exit
 echo ==================================================
 echo   Allowed Website: https://bapsoj.org/ only
-echo   Editors: Code::Blocks | VS Code | PyCharm | Sublime Text
+echo   Editors: Code::Blocks ^| VS Code ^| PyCharm ^| Sublime Text
 echo   Unlock: C:\Program Files\.unlock\unlock.bat
 echo ==================================================
 set /p choice="Select option [1-9]: "
