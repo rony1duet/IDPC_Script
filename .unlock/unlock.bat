@@ -38,9 +38,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableLUA' -Value 1 -Force -ErrorAction SilentlyContinue;" >nul 2>&1
 echo       UAC policies set to Low (Elevate without prompting for administrators).
 
-echo [3/3] Testing Internet Connectivity (Bapsoj.org)...
+echo [3/3] Testing Internet Connectivity (Bapsoj.org and api.bapsoj.org)...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('       Internet Connectivity: [PASS] (Bapsoj.org HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '       Internet Connectivity: [FAIL] Unable to reach external sites' -ForegroundColor Red }"
+    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('       bapsoj.org:     [PASS] (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '       bapsoj.org:     [FAIL] Unable to reach' -ForegroundColor Red };" ^
+    "try { $t = Invoke-WebRequest -Uri 'https://api.bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('       api.bapsoj.org: [PASS] (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '       api.bapsoj.org: [FAIL] Unable to reach' -ForegroundColor Red };"
 
 echo.
 echo ==================================================

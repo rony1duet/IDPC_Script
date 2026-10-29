@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Contest Setup - Bapsoj.org Firewall and CP Lab
+title Contest Setup - Bapsoj.org / api.bapsoj.org Firewall and CP Lab
 
 set "ROOT=%~dp0"
 set "CB_EXE=%ROOT%software\codeblocks.exe"
@@ -39,7 +39,7 @@ if /i "%ARG%"=="restore" goto call_unlock
 :menu
 cls
 echo ==================================================
-echo   CONTEST SETUP - BAPSOJ.ORG FIREWALL and CP LAB
+echo   CONTEST SETUP - BAPSOJ.ORG / API.BAPSOJ.ORG FIREWALL and CP LAB
 echo ==================================================
 echo   [1] Full Contest Setup (Extract, Install, Lock)
 echo   [2] Clean Profile Folders (Keep IDPC_Script)
@@ -47,11 +47,11 @@ echo   [3] Remove Offline AI Tools (Ollama, LM Studio)
 echo   [4] Extract MinGW and Clean Environment Paths
 echo   [5] Reinstall Code::Blocks, VS Code, PyCharm, Sublime Text
 echo   [6] Apply Admin Security and High UAC Policy
-echo   [7] Lock Internet (Allow ONLY bapsoj.org)
+echo   [7] Lock Internet (Allow ONLY bapsoj.org and api.bapsoj.org)
 echo   [8] Check Status (Firewall, MinGW, Tools, Security)
 echo   [9] Exit
 echo ==================================================
-echo   Allowed Website: https://bapsoj.org/ only
+echo   Allowed Websites: https://bapsoj.org/ and https://api.bapsoj.org/
 echo   Editors: Code::Blocks ^| VS Code ^| PyCharm ^| Sublime Text
 echo   Unlock: C:\Program Files\.unlock\unlock.bat
 echo ==================================================
@@ -132,7 +132,7 @@ echo   Workspace:    "%CONTEST_DIR%"
 echo   Compiler:     C:\MinGW\bin\g++.exe (bits/stdc++.h READY)
 echo   Code Runner:  Installed and Configured (Terminal: ON)
 echo   Security:     High UAC active (no extra user accounts)
-echo   Firewall:     LOCKED - ONLY https://bapsoj.org is accessible
+echo   Firewall:     LOCKED - ONLY https://bapsoj.org and https://api.bapsoj.org are accessible
 echo   Unlock Script: Deployed to C:\Program Files\.unlock\unlock.bat (Hidden)
 echo ==================================================
 echo.
@@ -239,10 +239,10 @@ goto menu
 :lock_only
 call :require_admin
 cls
-echo Locking firewall (Allow ONLY bapsoj.org)...
+echo Locking firewall (Allow ONLY bapsoj.org and api.bapsoj.org)...
 call :apply_firewall
 echo.
-echo [OK] Firewall locked - all websites blocked except bapsoj.org.
+echo [OK] Firewall locked - all websites blocked except bapsoj.org and api.bapsoj.org.
 echo.
 if not "!ARG!"=="" exit /b 0
 pause
@@ -286,8 +286,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "if (Test-Path 'C:\Program Files\.unlock\unlock.bat') { Write-Host '  Unlock Script:     [PASS] Deployed (C:\Program Files\.unlock\unlock.bat)' -ForegroundColor Green } elseif (Test-Path (Join-Path '%ROOT%' '.unlock\unlock.bat')) { Write-Host '  Unlock Script:     [READY IN REPO] .unlock\unlock.bat' -ForegroundColor Yellow } else { Write-Host '  Unlock Script:     [MISSING]' -ForegroundColor Red };" ^
     "$fw = (netsh advfirewall show currentprofile firewallpolicy 2>$null) -join ' ';" ^
     "$isBlocked = $fw -match 'BlockInbound,BlockOutbound';" ^
-    "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - ONLY BAPSOJ.ORG ALLOWED]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
-    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Bapsoj.org Access: [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Bapsoj.org Access: [FAIL] Unreachable' -ForegroundColor Red };"
+    "if ($isBlocked) { Write-Host '  Firewall Status:   [LOCKED - BAPSOJ.ORG + API.BAPSOJ.ORG ONLY]' -ForegroundColor Red } else { Write-Host '  Firewall Status:   [UNLOCKED - FULL INTERNET]' -ForegroundColor Green };" ^
+    "try { $t = Invoke-WebRequest -Uri 'https://bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  Bapsoj.org Access: [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  Bapsoj.org Access: [FAIL] Unreachable' -ForegroundColor Red };" ^
+    "try { $t = Invoke-WebRequest -Uri 'https://api.bapsoj.org' -Method GET -UseBasicParsing -TimeoutSec 4; Write-Host ('  api.bapsoj.org:    [PASS] Reachable (HTTP ' + $t.StatusCode + ')') -ForegroundColor Green } catch { Write-Host '  api.bapsoj.org:    [FAIL] Unreachable' -ForegroundColor Red };"
 echo ==================================================
 echo.
 if not "!ARG!"=="" exit /b 0
@@ -790,9 +791,12 @@ exit /b 0
 :: HELPER: APPLY FIREWALL LOCKDOWN
 :: =============================================================
 :apply_firewall
-set "BAPSOJ_IPS=3.169.64.43 3.169.64.8 3.169.64.95 3.169.64.101 185.199.108.153 185.199.109.153 185.199.110.153 185.199.111.153 2a03:b0c0:3:d0::153:68f7"
+:: bapsoj.org IPs  : 3.175.86.26  3.175.86.100  3.175.86.9  3.175.86.46
+:: api.bapsoj.org  : 3.1.93.170   13.228.198.216  52.74.155.204
+:: (seed list - runtime DNS resolution below will add any new IPs automatically)
+set "BAPSOJ_IPS=3.175.86.26 3.175.86.100 3.175.86.9 3.175.86.46 3.1.93.170 13.228.198.216 52.74.155.204"
 
-for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "'bapsoj.org','www.bapsoj.org','ws.bapsoj.org','uploads.bapsoj.org','static.bapsoj.org','drafts.bapsoj.org','community.bapsoj.org','blog.bapsoj.org','help.bapsoj.org','status.bapsoj.org' | ForEach-Object { (Resolve-DnsName $_ -ErrorAction SilentlyContinue).IPAddress } | Select-Object -Unique" 2^>nul`) do (
+for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "'bapsoj.org','www.bapsoj.org','api.bapsoj.org','ws.bapsoj.org','uploads.bapsoj.org','static.bapsoj.org','drafts.bapsoj.org','community.bapsoj.org','blog.bapsoj.org','help.bapsoj.org','status.bapsoj.org' | ForEach-Object { (Resolve-DnsName $_ -ErrorAction SilentlyContinue).IPAddress } | Select-Object -Unique" 2^>nul`) do (
     set "BAPSOJ_IPS=!BAPSOJ_IPS! %%A"
 )
 
